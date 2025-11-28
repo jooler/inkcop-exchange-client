@@ -1,6 +1,6 @@
 {
   "name": "@inkcop/exchange-client",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Framework-agnostic client SDK for InkCop Exchange Server",
   "author": "JERR <jerr@foxmail.com>",
   "license": "MIT",
