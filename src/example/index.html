@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>InkCop Exchange - AI Chat Demo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* ========== CSS Variables ========== */
+      :root {
+        --primary: #6366f1;
+        --primary-hover: #4f46e5;
+        --primary-light: rgba(99, 102, 241, 0.1);
+        --success: #10b981;
+        --warning: #f59e0b;
+        --error: #ef4444;
+        --bg-gradient-start: #f8fafc;
+        --bg-gradient-end: #e2e8f0;
+        --surface: rgba(255, 255, 255, 0.8);
+        --surface-elevated: rgba(255, 255, 255, 0.95);
+        --text-primary: #1e293b;
+        --text-secondary: #64748b;
+        --text-muted: #94a3b8;
+        --border: rgba(0, 0, 0, 0.08);
+        --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+        --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+        --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+        --radius-sm: 8px;
+        --radius-md: 12px;
+        --radius-lg: 16px;
+        --radius-xl: 24px;
+        --user-msg-bg: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        --assistant-msg-bg: var(--surface-elevated);
+        --tool-msg-bg: linear-gradient(
+          135deg,
+          rgba(245, 158, 11, 0.1) 0%,
+          rgba(251, 191, 36, 0.1) 100%
+        );
+        --tool-success-bg: linear-gradient(
+          135deg,
+          rgba(16, 185, 129, 0.1) 0%,
+          rgba(52, 211, 153, 0.1) 100%
+        );
+      }
+
+      .dark {
+        --bg-gradient-start: #0f172a;
+        --bg-gradient-end: #1e293b;
+        --surface: rgba(30, 41, 59, 0.8);
+        --surface-elevated: rgba(51, 65, 85, 0.95);
+        --text-primary: #f1f5f9;
+        --text-secondary: #94a3b8;
+        --text-muted: #64748b;
+        --border: rgba(255, 255, 255, 0.1);
+        --assistant-msg-bg: var(--surface-elevated);
+      }
+
+      /* ========== Reset & Base ========== */
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      html {
+        font-size: 16px;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      body {
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, sans-serif;
+        background: linear-gradient(
+          135deg,
+          var(--bg-gradient-start) 0%,
+          var(--bg-gradient-end) 100%
+        );
+        color: var(--text-primary);
+        transition: background 0.3s ease;
+        height: 100dvh; /* 关键：设置 body 的高度为视口的 100% */
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* ========== Header ========== */
+      .header {
+        background: var(--surface);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-bottom: 1px solid var(--border);
+        padding: 1rem 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+      }
+
+      .header-left {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      .logo {
+        width: 36px;
+        height: 36px;
+        background: var(--user-msg-bg);
+        border-radius: var(--radius-sm);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        color: white;
+        font-size: 1.1rem;
+      }
+
+      .brand {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .brand-name {
+        font-weight: 600;
+        font-size: 1.1rem;
+        color: var(--text-primary);
+      }
+
+      .brand-subtitle {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+      }
+
+      .header-right {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      .status-badge {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.375rem 0.75rem;
+        background: var(--surface-elevated);
+        border-radius: 999px;
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        border: 1px solid var(--border);
+      }
+
+      .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--text-muted);
+        transition: all 0.3s ease;
+      }
+
+      .status-dot.connected {
+        background: var(--success);
+        box-shadow: 0 0 8px var(--success);
+      }
+
+      .status-dot.connecting {
+        background: var(--warning);
+        animation: pulse 1.5s ease-in-out infinite;
+      }
+
+      .status-dot.error {
+        background: var(--error);
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
+        }
+      }
+
+      .theme-toggle {
+        width: 40px;
+        height: 40px;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border);
+        background: var(--surface-elevated);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        transition: all 0.2s ease;
+      }
+
+      .theme-toggle:hover {
+        background: var(--primary-light);
+        border-color: var(--primary);
+      }
+
+      /* ========== Main Content ========== */
+      .main-container {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+        max-width: 900px;
+        width: 100%;
+        margin: 0 auto;
+        padding: 1.5rem;
+        padding-bottom: 0;
+        overflow: hidden;
+        min-height: 0; /* 关键：允许 flex 子元素收缩 */
+        overflow-y: hidden;
+      }
+
+      /* ========== Config Panel ========== */
+      .config-panel {
+        background: var(--surface);
+        backdrop-filter: blur(20px);
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border);
+        margin-bottom: 1rem;
+        overflow: hidden;
+      }
+
+      .config-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.875rem 1rem;
+        cursor: pointer;
+        transition: background 0.2s ease;
+      }
+
+      .config-header:hover {
+        background: var(--primary-light);
+      }
+
+      .config-header-left {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 500;
+        font-size: 0.9rem;
+        color: var(--text-primary);
+      }
+
+      .config-toggle-icon {
+        transition: transform 0.3s ease;
+      }
+
+      .config-panel.expanded .config-toggle-icon {
+        transform: rotate(180deg);
+      }
+
+      .config-body {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease;
+      }
+
+      .config-panel.expanded .config-body {
+        max-height: 300px;
+      }
+
+      .config-content {
+        padding: 0 1rem 1rem;
+      }
+
+      .config-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+        margin-bottom: 0.75rem;
+      }
+
+      .config-field {
+        display: flex;
+        flex-direction: column;
+        gap: 0.375rem;
+      }
+
+      .config-field.full-width {
+        grid-column: 1 / -1;
+      }
+
+      .config-label {
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      .config-input {
+        padding: 0.625rem 0.875rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        background: var(--surface-elevated);
+        color: var(--text-primary);
+        font-size: 0.875rem;
+        transition: all 0.2s ease;
+      }
+
+      .config-input:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px var(--primary-light);
+      }
+
+      .tools-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.375rem;
+        padding: 0.5rem;
+        background: var(--surface-elevated);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        min-height: 42px;
+      }
+
+      .tool-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.25rem 0.5rem;
+        background: var(--primary-light);
+        color: var(--primary);
+        border-radius: 999px;
+        font-size: 0.75rem;
+        font-weight: 500;
+      }
+
+      .tool-chip-icon {
+        font-size: 0.7rem;
+      }
+
+      /* ========== Chat Container ========== */
+      .chat-container {
+        flex: 1;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        padding: 0.5rem 0;
+        scroll-behavior: smooth;
+      }
+
+      .chat-container::-webkit-scrollbar {
+        width: 6px;
+      }
+
+      .chat-container::-webkit-scrollbar-track {
+        background: transparent;
+      }
+
+      .chat-container::-webkit-scrollbar-thumb {
+        background: var(--border);
+        border-radius: 3px;
+      }
+
+      /* ========== Messages ========== */
+      .message {
+        max-width: 85%;
+        animation: messageIn 0.3s ease;
+      }
+
+      @keyframes messageIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .message.user {
+        align-self: flex-end;
+      }
+
+      .message.assistant,
+      .message.tool,
+      .message.system {
+        align-self: flex-start;
+      }
+
+      .message-bubble {
+        padding: 0.875rem 1.125rem;
+        border-radius: var(--radius-lg);
+        line-height: 1.6;
+        word-wrap: break-word;
+        box-shadow: var(--shadow-sm);
+      }
+
+      .message.user .message-bubble {
+        background: var(--user-msg-bg);
+        color: white;
+        border-bottom-right-radius: 4px;
+      }
+
+      .message.assistant .message-bubble {
+        background: var(--assistant-msg-bg);
+        border: 1px solid var(--border);
+        color: var(--text-primary);
+        border-bottom-left-radius: 4px;
+      }
+
+      .message.system .message-bubble {
+        background: var(--primary-light);
+        color: var(--primary);
+        font-size: 0.875rem;
+        border: 1px dashed var(--primary);
+      }
+
+      .message.tool .message-bubble {
+        background: var(--tool-msg-bg);
+        border: 1px solid rgba(245, 158, 11, 0.2);
+        font-family: "SF Mono", "Fira Code", monospace;
+        font-size: 0.85rem;
+      }
+
+      .message.tool.success .message-bubble {
+        background: var(--tool-success-bg);
+        border-color: rgba(16, 185, 129, 0.2);
+      }
+
+      .tool-header {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: var(--text-primary);
+      }
+
+      .tool-icon {
+        font-size: 1rem;
+      }
+
+      .tool-name {
+        font-size: 0.875rem;
+      }
+
+      .tool-status {
+        margin-left: auto;
+        font-size: 0.75rem;
+        padding: 0.125rem 0.5rem;
+        border-radius: 999px;
+        background: rgba(0, 0, 0, 0.05);
+      }
+
+      .tool-status.loading {
+        color: var(--warning);
+      }
+
+      .tool-status.success {
+        color: var(--success);
+      }
+
+      .tool-content {
+        color: var(--text-secondary);
+        white-space: pre-wrap;
+        max-height: 200px;
+        overflow-y: auto;
+      }
+
+      .typing-indicator {
+        display: inline-flex;
+        gap: 4px;
+        padding: 4px 0;
+      }
+
+      .typing-indicator span {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--text-muted);
+        animation: typing 1.4s ease-in-out infinite;
+      }
+
+      .typing-indicator span:nth-child(2) {
+        animation-delay: 0.2s;
+      }
+
+      .typing-indicator span:nth-child(3) {
+        animation-delay: 0.4s;
+      }
+
+      @keyframes typing {
+        0%,
+        60%,
+        100% {
+          transform: translateY(0);
+        }
+        30% {
+          transform: translateY(-4px);
+        }
+      }
+
+      /* ========== Input Area ========== */
+      .input-area {
+        flex-shrink: 0; /* 不收缩 */
+        margin-top: 1rem;
+        margin-bottom: 1.5rem;
+        background: var(--surface);
+        backdrop-filter: blur(20px);
+        border-radius: var(--radius-xl);
+        border: 1px solid var(--border);
+        padding: 0.75rem;
+        display: flex;
+        align-items: flex-end;
+        gap: 0.75rem;
+        box-shadow: var(--shadow-lg);
+      }
+
+      .input-wrapper {
+        flex: 1;
+        position: relative;
+      }
+
+      .message-textarea {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: none;
+        border-radius: var(--radius-md);
+        background: var(--surface-elevated);
+        color: var(--text-primary);
+        font-size: 0.95rem;
+        line-height: 1.5;
+        resize: none;
+        min-height: 48px;
+        max-height: 150px;
+        font-family: inherit;
+        transition: all 0.2s ease;
+      }
+
+      .message-textarea:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px var(--primary-light);
+      }
+
+      .message-textarea::placeholder {
+        color: var(--text-muted);
+      }
+
+      .send-btn {
+        width: 48px;
+        height: 48px;
+        border-radius: var(--radius-md);
+        border: none;
+        background: var(--user-msg-bg);
+        color: white;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        transition: all 0.2s ease;
+        flex-shrink: 0;
+      }
+
+      .send-btn:hover:not(:disabled) {
+        transform: scale(1.05);
+        box-shadow: var(--shadow-md);
+      }
+
+      .send-btn:active:not(:disabled) {
+        transform: scale(0.95);
+      }
+
+      .send-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      /* ========== Empty State ========== */
+      .empty-state {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 3rem;
+        color: var(--text-muted);
+      }
+
+      .empty-icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+      }
+
+      .empty-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        margin-bottom: 0.5rem;
+      }
+
+      .empty-desc {
+        font-size: 0.9rem;
+        max-width: 300px;
+      }
+
+      /* ========== Responsive ========== */
+      @media (max-width: 640px) {
+        .main-container {
+          padding: 1rem;
+        }
+
+        .config-row {
+          grid-template-columns: 1fr;
+        }
+
+        .message {
+          max-width: 92%;
+        }
+
+        .header {
+          padding: 0.75rem 1rem;
+        }
+
+        .brand-subtitle {
+          display: none;
+        }
+      }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "uuid": "https://esm.sh/uuid@9.0.1",
+          "@inkcop/exchange-client": "/dist/index.mjs"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <!-- Header -->
+    <header class="header">
+      <div class="header-left">
+        <div class="logo">I</div>
+        <div class="brand">
+          <span class="brand-name">InkCop Exchange</span>
+          <span class="brand-subtitle">AI 对话演示</span>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="status-badge">
+          <div id="status-dot" class="status-dot"></div>
+          <span id="status-text">未连接</span>
+        </div>
+        <button class="theme-toggle" id="theme-toggle" title="切换主题">
+          🌙
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="main-container">
+      <!-- Config Panel -->
+      <div class="config-panel" id="config-panel">
+        <div class="config-header" id="config-toggle">
+          <div class="config-header-left">
+            <span>⚙️</span>
+            <span>连接配置</span>
+          </div>
+          <span class="config-toggle-icon">▼</span>
+        </div>
+        <div class="config-body">
+          <div class="config-content">
+            <div class="config-row">
+              <div class="config-field">
+                <label class="config-label">服务地址</label>
+                <input
+                  type="text"
+                  class="config-input"
+                  id="base-url"
+                  value="http://localhost:9200"
+                  placeholder="http://localhost:9200"
+                />
+              </div>
+              <div class="config-field">
+                <label class="config-label">Client ID</label>
+                <input
+                  type="text"
+                  class="config-input"
+                  id="client-id"
+                  placeholder="自动生成"
+                />
+              </div>
+            </div>
+            <div class="config-row">
+              <div class="config-field full-width">
+                <label class="config-label">已启用的工具</label>
+                <div class="tools-chips" id="tools-chips">
+                  <span style="color: var(--text-muted); font-size: 0.8rem"
+                    >连接后自动加载...</span
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chat Container -->
+      <div class="chat-container" id="chat-container">
+        <div class="empty-state" id="empty-state">
+          <div class="empty-icon">💬</div>
+          <div class="empty-title">开始对话</div>
+          <div class="empty-desc">连接到服务器后，即可与 AI 助手进行对话</div>
+        </div>
+      </div>
+
+      <!-- Input Area -->
+      <div class="input-area">
+        <div class="input-wrapper">
+          <textarea
+            id="message-input"
+            class="message-textarea"
+            placeholder="输入消息..."
+            rows="1"
+          ></textarea>
+        </div>
+        <button id="send-btn" class="send-btn" disabled title="发送">➤</button>
+      </div>
+    </div>
+
+    <script type="module">
+      import { InkcopExchangeClient } from "@inkcop/exchange-client";
+
+      // ========== State ==========
+      let client = null;
+      let availableTools = [];
+      let chatHistory = [];
+      let currentStreamContent = "";
+      let currentStreamDiv = null;
+      let currentStreamMsgIndex = -1;
+
+      // ========== DOM Elements ==========
+      const statusDot = document.getElementById("status-dot");
+      const statusText = document.getElementById("status-text");
+      const chatContainer = document.getElementById("chat-container");
+      const emptyState = document.getElementById("empty-state");
+      const messageInput = document.getElementById("message-input");
+      const sendBtn = document.getElementById("send-btn");
+      const themeToggle = document.getElementById("theme-toggle");
+      const configPanel = document.getElementById("config-panel");
+      const configToggle = document.getElementById("config-toggle");
+      const baseUrlInput = document.getElementById("base-url");
+      const clientIdInput = document.getElementById("client-id");
+      const toolsChips = document.getElementById("tools-chips");
+
+      // ========== Theme Toggle ==========
+      themeToggle.addEventListener("click", () => {
+        document.body.classList.toggle("dark");
+        themeToggle.textContent = document.body.classList.contains("dark")
+          ? "☀️"
+          : "🌙";
+      });
+
+      // ========== Config Panel Toggle ==========
+      configToggle.addEventListener("click", () => {
+        configPanel.classList.toggle("expanded");
+      });
+
+      // ========== Auto-resize Textarea ==========
+      messageInput.addEventListener("input", () => {
+        messageInput.style.height = "auto";
+        messageInput.style.height =
+          Math.min(messageInput.scrollHeight, 150) + "px";
+      });
+
+      // ========== Status Helpers ==========
+      function updateStatus(status, text) {
+        statusDot.className = "status-dot " + status;
+        const statusMap = {
+          connected: "已连接",
+          connecting: "连接中...",
+          error: "连接错误",
+          disconnected: "未连接",
+        };
+        statusText.textContent = text || statusMap[status] || status;
+      }
+
+      function updateToolsDisplay() {
+        if (availableTools.length === 0) {
+          toolsChips.innerHTML = `<span style="color: var(--text-muted); font-size: 0.8rem">暂无可用工具</span>`;
+          return;
+        }
+        toolsChips.innerHTML = availableTools
+          .map(
+            (t) =>
+              `<span class="tool-chip"><span class="tool-chip-icon">🔧</span>${t.name}</span>`
+          )
+          .join("");
+      }
+
+      // ========== Message Helpers ==========
+      function hideEmptyState() {
+        if (emptyState) emptyState.style.display = "none";
+      }
+
+      function createMessage(role, content, options = {}) {
+        hideEmptyState();
+        const msg = document.createElement("div");
+        msg.className = `message ${role}`;
+        if (options.id) msg.id = options.id;
+        if (options.success) msg.classList.add("success");
+
+        const bubble = document.createElement("div");
+        bubble.className = "message-bubble";
+
+        if (role === "tool") {
+          bubble.innerHTML = `
+            <div class="tool-header">
+              <span class="tool-icon">${options.loading ? "⏳" : options.success ? "✅" : "🔧"}</span>
+              <span class="tool-name">${options.toolName || "工具调用"}</span>
+              <span class="tool-status ${options.loading ? "loading" : "success"}">
+                ${options.loading ? "执行中..." : "完成"}
+              </span>
+            </div>
+            <div class="tool-content">${escapeHtml(content)}</div>
+          `;
+        } else {
+          bubble.innerHTML = formatContent(content);
+        }
+
+        msg.appendChild(bubble);
+        chatContainer.appendChild(msg);
+        scrollToBottom();
+        return msg;
+      }
+
+      function formatContent(text) {
+        return escapeHtml(text).replace(/\n/g, "<br>");
+      }
+
+      function escapeHtml(text) {
+        const div = document.createElement("div");
+        div.textContent = text;
+        return div.innerHTML;
+      }
+
+      function scrollToBottom() {
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+      }
+
+      function showTypingIndicator() {
+        hideEmptyState();
+        const msg = document.createElement("div");
+        msg.className = "message assistant";
+        msg.id = "typing-indicator";
+        msg.innerHTML = `
+          <div class="message-bubble">
+            <div class="typing-indicator">
+              <span></span><span></span><span></span>
+            </div>
+          </div>
+        `;
+        chatContainer.appendChild(msg);
+        scrollToBottom();
+      }
+
+      function removeTypingIndicator() {
+        const indicator = document.getElementById("typing-indicator");
+        if (indicator) indicator.remove();
+      }
+
+      // ========== Client Setup ==========
+      function setupClientEvents(c) {
+        c.on("connection:status", ({ status }) => {
+          updateStatus(status);
+        });
+
+        c.on("connection:connected", (serverStatus) => {
+          updateStatus(
+            "connected",
+            `已连接 (${serverStatus.serverId.slice(0, 8)}...)`
+          );
+          availableTools = serverStatus.tools || [];
+          updateToolsDisplay();
+          sendBtn.disabled = false;
+        });
+
+        c.on("connection:error", (err) => {
+          updateStatus("error", err.message);
+          createMessage("system", `❌ 连接错误: ${err.message}`);
+        });
+
+        c.on("app:online", (status) => {
+          availableTools = status.tools || [];
+          updateToolsDisplay();
+          createMessage("system", "📱 App 已上线");
+        });
+
+        c.on("app:offline", () => {
+          createMessage("system", "📴 App 已离线");
+        });
+
+        // Stream handling
+        c.on("message:stream", (chunk) => {
+          removeTypingIndicator();
+          const msgIndex = chunk.messageIndex ?? 0;
+
+          if (
+            chunk.chunkIndex === 0 ||
+            !currentStreamDiv ||
+            msgIndex !== currentStreamMsgIndex
+          ) {
+            currentStreamDiv = createMessage("assistant", "");
+            currentStreamContent = "";
+            currentStreamMsgIndex = msgIndex;
+          }
+
+          currentStreamContent += chunk.content;
+          const bubble = currentStreamDiv.querySelector(".message-bubble");
+          if (bubble) {
+            bubble.innerHTML = formatContent(currentStreamContent);
+          }
+          scrollToBottom();
+        });
+
+        c.on("message:complete", (msg) => {
+          removeTypingIndicator();
+          if (currentStreamContent) {
+            chatHistory.push({
+              role: "assistant",
+              content: currentStreamContent,
+            });
+          }
+          currentStreamDiv = null;
+          currentStreamContent = "";
+          currentStreamMsgIndex = -1;
+
+          if (!msg.hasToolCalls) {
+            sendBtn.disabled = false;
+          }
+        });
+
+        c.on("message:error", ({ message }) => {
+          removeTypingIndicator();
+          sendBtn.disabled = false;
+          createMessage("system", `❌ 错误: ${message}`);
+        });
+
+        c.on("tool:start", (event) => {
+          event.toolCalls.forEach((tc) => {
+            createMessage("tool", `参数: ${JSON.stringify(tc.arguments, null, 2)}`, {
+              id: `tool-${tc.id}`,
+              toolName: tc.name,
+              loading: true,
+            });
+          });
+        });
+
+        c.on("tool:result", (result) => {
+          const toolDiv = document.getElementById(`tool-${result.toolCallId}`);
+          if (toolDiv) {
+            toolDiv.classList.add("success");
+            const header = toolDiv.querySelector(".tool-header");
+            const status = toolDiv.querySelector(".tool-status");
+            const content = toolDiv.querySelector(".tool-content");
+            const icon = toolDiv.querySelector(".tool-icon");
+
+            if (icon) icon.textContent = result.success ? "✅" : "❌";
+            if (status) {
+              status.textContent = result.success ? "完成" : "失败";
+              status.className = `tool-status ${result.success ? "success" : "error"}`;
+            }
+            if (content) {
+              content.textContent = result.result;
+            }
+          }
+          scrollToBottom();
+        });
+      }
+
+      // ========== Init & Send ==========
+      async function initClient() {
+        updateStatus("connecting");
+
+        const baseUrl = baseUrlInput.value.trim() || "http://localhost:9200";
+        const clientId = clientIdInput.value.trim() || undefined;
+
+        client = new InkcopExchangeClient({
+          baseUrl,
+          clientId,
+          debug: true,
+        });
+
+        setupClientEvents(client);
+
+        try {
+          await client.connect();
+        } catch (err) {
+          console.error("Connection failed:", err);
+          updateStatus("error", "连接失败");
+        }
+      }
+
+      async function sendMessage() {
+        const text = messageInput.value.trim();
+        if (!text || !client) return;
+
+        // Add user message
+        createMessage("user", text);
+        chatHistory.push({ role: "user", content: text });
+
+        messageInput.value = "";
+        messageInput.style.height = "auto";
+        sendBtn.disabled = true;
+
+        showTypingIndicator();
+
+        try {
+          const messages = chatHistory
+            .filter((m) => m.role === "user" || m.role === "assistant")
+            .map((m) => ({ role: m.role, content: m.content }));
+
+          await client.sendChat(text, {
+            tools: availableTools.map((t) => t.name), // Enable all tools
+            messages: messages.length > 1 ? messages : undefined,
+          });
+        } catch (err) {
+          removeTypingIndicator();
+          sendBtn.disabled = false;
+          createMessage("system", `❌ 发送失败: ${err.message}`);
+        }
+      }
+
+      // ========== Event Listeners ==========
+      sendBtn.addEventListener("click", sendMessage);
+      messageInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          sendMessage();
+        }
+      });
+
+      // ========== Start ==========
+      initClient();
+    </script>
+  </body>
+</html>
