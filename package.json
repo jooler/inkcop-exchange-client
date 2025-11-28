@@ -1,6 +1,6 @@
 {
-  "name": "inkcop-exchange-client",
-  "version": "1.0.0",
+  "name": "@inkcop/exchange-client",
+  "version": "0.0.1",
   "description": "Framework-agnostic client SDK for InkCop Exchange Server",
   "author": "JERR <jerr@foxmail.com>",
   "license": "MIT",
@@ -53,12 +53,12 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/inkcop/inkcop-exchange-client.git"
+    "url": "https://github.com/jooler/inkcop-exchange-client.git"
   },
   "bugs": {
-    "url": "https://github.com/inkcop/inkcop-exchange-client/issues"
+    "url": "https://github.com/jooler/inkcop-exchange-client/issues"
   },
-  "homepage": "https://github.com/inkcop/inkcop-exchange-client#readme",
+  "homepage": "https://github.com/jooler/inkcop-exchange-client#readme",
   "engines": {
     "node": ">=18.0.0"
   }

@@ -20,17 +20,17 @@ A framework-agnostic client SDK for InkCop Exchange Server.
 ## Installation
 
 ```bash
-npm install inkcop-exchange-client
+npm install @inkcop/exchange-client
 # or
-yarn add inkcop-exchange-client
+yarn add @inkcop/exchange-client
 # or
-bun add inkcop-exchange-client
+bun add @inkcop/exchange-client
 ```
 
 ## Quick Start
 
 ```typescript
-import { InkcopExchangeClient } from 'inkcop-exchange-client';
+import { InkcopExchangeClient } from '@inkcop/exchange-client';
 
 const client = new InkcopExchangeClient({
   baseUrl: 'http://localhost:9200',

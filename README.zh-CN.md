@@ -20,15 +20,15 @@
 ## 安装
 
 ```bash
-npm install inkcop-exchange-client
+npm install @inkcop/exchange-client
 # 或
-bun add inkcop-exchange-client
+bun add @inkcop/exchange-client
 ```
 
 ## 快速开始
 
 ```typescript
-import { InkcopExchangeClient } from 'inkcop-exchange-client';
+import { InkcopExchangeClient } from '@inkcop/exchange-client';
 
 const client = new InkcopExchangeClient({
   baseUrl: 'http://localhost:9200',
